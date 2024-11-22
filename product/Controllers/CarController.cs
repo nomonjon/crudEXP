@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using product.Data;
+using product.Dtos.Car;
+using product.Mappers;
 using product.Models;
 
 namespace product.Controller;
@@ -17,7 +19,8 @@ public class CarController : ControllerBase
     [HttpGet]
     public IActionResult GetAll()
     {
-        var cars = context.Cars.ToList();
+        var cars = context.Cars.ToList()
+            .Select(c => c.ToCarDto());
         return Ok(cars);
     }
 
@@ -29,24 +32,47 @@ public class CarController : ControllerBase
         {
             return NotFound();
         }
-        return Ok(car);
+        return Ok(car.ToCarDto());
     }
 
-
     [HttpPost]
-        public IActionResult CreateCar([FromBody] Car car)
-        {
-            car.Id = Guid.NewGuid();
-            if (car == null)
-            {
-                return BadRequest("Car data is null.");
-            }
+    public IActionResult Create([FromBody] CreateCarRequestDto carDto)
+    {
+        var car = carDto.ToCarFromCreateDto();
+        context.Cars.Add(car);
+        context.SaveChanges();
+        return CreatedAtAction(nameof(GetById), new {id = car.Id}, car.ToCarDto());
+    }
 
-            // Add the car to the database
-            context.Cars.Add(car);
-            context.SaveChanges();  // Synchronous call to save changes
+    [HttpPut]
+    [Route("{id}")]
+    public IActionResult Update([FromRoute] int id, [FromBody] UpdateCarRequestDto updateDto)
+    {
+        var car = context.Cars.FirstOrDefault(c => c.Id == id);
+        
+        if(car == null)
+            return NotFound();
+        
+        car.Brand = updateDto.Brand;
+        car.Color = updateDto.Color;
+        car.Model = updateDto.Model;
+        car.Price = updateDto.Price;
 
-            // Return the created car with HTTP 201 status
-            return CreatedAtAction(nameof(GetById), new { id = car.Id }, car);
-        }
+        context.SaveChanges();
+        return Ok(car.ToCarDto());
+    }
+
+    [HttpDelete]
+    [Route("{id}")]
+    public IActionResult Delete([FromRoute] int id)
+    {
+        var car = context.Cars.FirstOrDefault(x => x.Id == id);
+        
+        if (car == null)
+            return NotFound();
+
+        context.Cars.Remove(car);
+        context.SaveChanges();
+        return NoContent();
+    }
 }

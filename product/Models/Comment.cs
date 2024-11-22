@@ -4,10 +4,11 @@ using Microsoft.EntityFrameworkCore.Design;
 
 public class Comment
 {
-    public Guid Id { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string Content { get; set; } = string.Empty;
+    public int Id { get; set; }
+    public string Title { get; set; } = "Rating";
+    public string Content { get; set; } = "Bla Bla Bla";
     public DateTime CreatedOn { get; set; } = DateTime.Now;
-    public Guid CarId { get; set; }  
+    public int CarId { get; set; } 
+    public Car? Car { get; set; }
 
 }
